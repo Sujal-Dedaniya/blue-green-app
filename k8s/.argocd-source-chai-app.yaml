@@ -1,3 +1,4 @@
 kustomize:
   images:
-  - sujaldedaniya1014/blue-green:v1.0.2
+  - sujaldedaniya1014/blue-green:v1.0.0
+  
