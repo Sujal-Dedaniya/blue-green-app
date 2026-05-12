@@ -1,30 +1,42 @@
-apiVersion: argoproj.io/v1alpha1 # Specifies the API version for the ArgoCD Application CRD
-kind: Application               # Declares this resource as an ArgoCD Application
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
 metadata:
-  name: chai-app                # Name of the ArgoCD Application
-  namespace: argocd             # Namespace where the Application resource will be created
+  name: chai-app
+  namespace: argocd
+
   annotations:
-    # Assign alias 'chai-app' to your image
-    argocd-image-updater.argoproj.io/image-list: chai-app=sujaldedaniya1014/blue-green # Maps the image alias 'chai-app' to your DockerHub image
+    # Docker image to track
+    argocd-image-updater.argoproj.io/image-list: chai-app=sujaldedaniya1014/blue-green
 
-    # Use git write-back
-    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-git-creds # Configures image updater to write changes back to Git using provided secret
+    # Git write-back method
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-git-creds
 
-    # Update strategy for chai-app image
-    argocd-image-updater.argoproj.io/chai-app.update-strategy: semver # Uses semantic versioning for image updates
+    # Use semantic versioning strategy
+    argocd-image-updater.argoproj.io/chai-app.update-strategy: semver
+
+    # Allow only semantic version tags like v1.0.0
+    argocd-image-updater.argoproj.io/chai-app.allow-tags: regexp:^v[0-9]+\.[0-9]+\.[0-9]+$
+
+    # Force image updates even if ArgoCD thinks nothing changed
+    argocd-image-updater.argoproj.io/chai-app.force-update: "true"
 
 spec:
-  project: default              # Associates this Application with the 'default' ArgoCD project
-  source:
-    repoURL: https://github.com/Sujal-Dedaniya/blue-green-app.git # Git repository containing the app manifests
-    targetRevision: main        # Branch or tag to track in the repository
-    path: k8s # Path within the repo where the manifests(kustomization) are located
-  destination:
-    server: https://kubernetes.default.svc # Kubernetes API server address (in-cluster)
-    namespace: default           # Namespace in the cluster where app resources will be deployed
-  syncPolicy:
-    automated:                  # Enables automated sync for the application
-      prune: true               # Automatically deletes resources that are no longer defined in Git
-      selfHeal: true            # Automatically corrects drift between live and desired state
+  project: default
 
-# Brief: This ArgoCD Application manifest configures automated deployment and image updates for the 'chai-app' using ArgoCD Image Updater, with changes written back to Git.
+  source:
+    repoURL: https://github.com/Sujal-Dedaniya/blue-green-app.git
+    targetRevision: main
+    path: k8s
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+    syncOptions:
+      - CreateNamespace=true
